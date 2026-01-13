@@ -8,6 +8,12 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <title>Drift Dots</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700&display=swap"
+    rel="stylesheet"
+  />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="icons/icon-192.png" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
@@ -20,11 +26,11 @@
         <div class="map-header">
           <div>
             <div class="title">Drift Dots</div>
-            <div class="subtitle">Level path</div>
+            <div class="subtitle">Campaign Map</div>
           </div>
           <div class="map-actions">
             <button id="installBtn" class="ghost hidden">Install</button>
-            <button id="playBtn" class="ghost">Play</button>
+            <button id="playBtn" class="ghost primary">Play</button>
           </div>
         </div>
         <div class="map-lights" aria-hidden="true">
@@ -46,7 +52,7 @@
           </div>
         </div>
         <div class="tuning-card">
-          <div class="label">Difficulty Tuning</div>
+          <div class="label">Balance Lab</div>
           <div class="tuning-grid">
             <label>Moves Base <span id="movesBaseVal">24</span></label>
             <input id="movesBase" type="range" min="18" max="34" value="24" />
@@ -70,8 +76,8 @@
       <div class="map-card">
         <div class="map-header">
           <div>
-            <div class="title">Booster Shop</div>
-            <div class="subtitle">Spend coins to stock up</div>
+            <div class="title">Booster Vault</div>
+            <div class="subtitle">Gear up for the next run</div>
           </div>
           <div class="shop-balance">Coins <span id="shopCoins">0</span></div>
           <button id="shopCloseBtn" class="ghost">Back</button>
@@ -127,107 +133,107 @@
     </section>
 
     <section id="gameScreen" class="game-screen hidden">
-    <header class="topbar">
-      <div class="brand">
-        <div class="logo">DD</div>
-        <div>
-          <div class="title">Drift Dots</div>
-          <div class="subtitle">soft, strategic, satisfying</div>
-        </div>
-      </div>
-      <div class="top-actions">
-        <button id="mapBtn" class="ghost">Map</button>
-        <button id="shopBtn" class="ghost">Shop</button>
-        <button id="resetBtn" class="ghost">New Run</button>
-      </div>
-    </header>
+      <div class="game-shell">
+        <header class="topbar">
+          <div class="brand">
+            <div class="logo">DD</div>
+            <div>
+              <div class="title">Drift Dots</div>
+              <div class="subtitle">smooth, tactical, rewarding</div>
+            </div>
+          </div>
+          <div id="chapterLabel" class="chapter-tag">Chapter 1</div>
+          <div class="top-actions">
+            <button id="mapBtn" class="ghost">Map</button>
+            <button id="shopBtn" class="ghost">Shop</button>
+            <button id="resetBtn" class="ghost">Restart</button>
+          </div>
+          <div class="audio-inline">
+            <button id="soundToggle" class="ghost tiny">Sound Off</button>
+            <input id="soundVolume" type="range" min="0" max="100" value="50" />
+          </div>
+        </header>
 
-    <section class="meta-strip">
-      <div class="meta-pill">
-        <div class="pill-label">Coins</div>
-        <div id="coins" class="pill-value">0</div>
-      </div>
-      <div class="meta-pill">
-        <div class="pill-label">Stars</div>
-        <div id="starsTotal" class="pill-value">0</div>
-      </div>
-      <div class="meta-pill">
-        <div class="pill-label">Streak</div>
-        <div id="streak" class="pill-value">1</div>
-      </div>
-      <div class="meta-pill chest">
-        <div class="pill-label">Chest</div>
-        <div class="pill-value" id="chestProgress">0/15</div>
-        <button id="claimChestBtn" class="ghost tiny hidden">Claim</button>
-      </div>
-      <div class="meta-pill audio">
-        <div class="pill-label">Sound</div>
-        <div class="audio-controls">
-          <button id="soundToggle" class="ghost tiny">Off</button>
-          <input id="soundVolume" type="range" min="0" max="100" value="50" />
-        </div>
-      </div>
-    </section>
+        <section class="stat-strip">
+          <div class="stat-card">
+            <div class="stat-label">Score</div>
+            <div id="score" class="stat-value">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Stage</div>
+            <div id="level" class="stat-value">1</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Moves</div>
+            <div id="moves" class="stat-value">30</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Combo</div>
+            <div id="combo" class="stat-value">x1</div>
+          </div>
+          <div class="stat-card gold">
+            <div class="stat-label">Coins</div>
+            <div id="coins" class="stat-value">0</div>
+          </div>
+          <div class="stat-card stars">
+            <div class="stat-label">Stars</div>
+            <div id="starsTotal" class="stat-value">0</div>
+          </div>
+          <div class="stat-card streak">
+            <div class="stat-label">Streak</div>
+            <div id="streak" class="stat-value">1</div>
+          </div>
+          <div class="stat-card chest">
+            <div class="stat-label">Chest</div>
+            <div class="stat-row">
+              <div id="chestProgress" class="stat-value">0/15</div>
+              <button id="claimChestBtn" class="ghost tiny hidden">Claim</button>
+            </div>
+          </div>
+        </section>
 
-    <section class="hud">
-      <div class="hud-card">
-        <div class="label">Score</div>
-        <div id="score" class="value">0</div>
+        <section class="game-main">
+          <section class="playfield">
+            <canvas id="board" width="560" height="560" aria-label="game board"></canvas>
+            <div class="board-vignette" aria-hidden="true"></div>
+            <div id="boardToast" class="board-toast">Shuffling...</div>
+            <div class="hint">Swap to match 3+ and charge powerups.</div>
+          </section>
+          <section class="side-panel">
+            <div class="panel-card">
+              <div class="label">Objectives</div>
+              <div id="objectiveList" class="objective-list"></div>
+              <div id="levelStatus" class="level-status hidden">Stage clear</div>
+              <div id="levelRewards" class="reward-row hidden">
+                <div class="reward-stars" id="rewardStars"></div>
+                <div id="rewardText" class="reward-text">+0 coins</div>
+              </div>
+              <div class="level-actions">
+                <button id="nextLevelBtn" class="ghost primary hidden">Next Stage</button>
+                <button id="backToMapBtn" class="ghost hidden">Back to Map</button>
+              </div>
+            </div>
+            <div class="panel-card">
+              <div class="label">Boosters</div>
+              <div class="boosters">
+                <button class="booster" data-booster="shuffle">
+                  <span class="icon icon-shuffle"></span>
+                  Shuffle <span id="boostShuffle">0</span>
+                </button>
+                <button class="booster" data-booster="hammer">
+                  <span class="icon icon-hammer"></span>
+                  Hammer <span id="boostHammer">0</span>
+                </button>
+                <button class="booster" data-booster="storm">
+                  <span class="icon icon-storm"></span>
+                  Color Storm <span id="boostStorm">0</span>
+                </button>
+              </div>
+              <div class="booster-hint">Tap a booster, then tap a tile.</div>
+            </div>
+          </section>
+        </section>
       </div>
-      <div class="hud-card">
-        <div class="label">Level</div>
-        <div id="level" class="value">1</div>
-      </div>
-      <div class="hud-card">
-        <div class="label">Moves</div>
-        <div id="moves" class="value">30</div>
-      </div>
-      <div class="hud-card combo">
-        <div class="label">Combo</div>
-        <div id="combo" class="value">x1</div>
-      </div>
-    </section>
-
-    <section class="panel">
-      <div class="panel-card">
-        <div class="label">Objectives</div>
-        <div id="objectiveList" class="objective-list"></div>
-        <div id="levelStatus" class="level-status hidden">Level complete</div>
-        <div id="levelRewards" class="reward-row hidden">
-          <div class="reward-stars" id="rewardStars"></div>
-          <div id="rewardText" class="reward-text">+0 coins</div>
-        </div>
-        <div class="level-actions">
-          <button id="nextLevelBtn" class="ghost hidden">Next Level</button>
-          <button id="backToMapBtn" class="ghost hidden">Back to Map</button>
-        </div>
-      </div>
-      <div class="panel-card">
-        <div class="label">Boosters</div>
-        <div class="boosters">
-          <button class="booster" data-booster="shuffle">
-            <span class="icon icon-shuffle"></span>
-            Shuffle <span id="boostShuffle">0</span>
-          </button>
-          <button class="booster" data-booster="hammer">
-            <span class="icon icon-hammer"></span>
-            Hammer <span id="boostHammer">0</span>
-          </button>
-          <button class="booster" data-booster="storm">
-            <span class="icon icon-storm"></span>
-            Color Storm <span id="boostStorm">0</span>
-          </button>
-        </div>
-        <div class="booster-hint">Tap a booster, then tap a tile.</div>
-      </div>
-    </section>
-
-    <section class="playfield">
-      <canvas id="board" width="560" height="560" aria-label="game board"></canvas>
-      <div class="board-vignette" aria-hidden="true"></div>
-      <div id="boardToast" class="board-toast">Shuffling...</div>
-      <div class="hint">Swap adjacent dots to match 3+ in a row or column.</div>
-    </section>
 
     <div id="tutorialOverlay" class="tutorial hidden">
       <div class="tutorial-card">
@@ -238,7 +244,7 @@
 
     <div id="summaryOverlay" class="summary hidden">
       <div class="summary-card">
-        <div class="summary-title">Level Complete</div>
+        <div class="summary-title">Stage Clear</div>
         <div id="summaryStars" class="reward-stars"></div>
         <div id="summaryCoins" class="summary-coins">+0 coins</div>
         <div id="summaryBoosters" class="summary-boosters hidden">Bonus pack</div>
@@ -247,41 +253,24 @@
           <button id="retryBtn" class="ghost">Retry</button>
           <button id="shareBtn" class="ghost">Share</button>
           <button id="summaryMapBtn" class="ghost">Map</button>
-          <button id="summaryNextBtn" class="ghost">Next</button>
+          <button id="summaryNextBtn" class="ghost primary">Next</button>
         </div>
       </div>
     </div>
 
     <div id="failOverlay" class="summary fail hidden">
       <div class="summary-card fail-card">
-        <div class="summary-title">Out of Moves</div>
-        <div class="summary-coins">Need a boost to keep going?</div>
+        <div class="summary-title">No Moves Left</div>
+        <div class="summary-coins">Need a boost to keep rolling?</div>
         <div class="summary-boosters" id="failCost">Continue for 200 coins (+5 moves)</div>
         <div class="summary-actions">
-          <button id="continueBtn" class="ghost">Continue</button>
+          <button id="continueBtn" class="ghost primary">Continue</button>
           <button id="failRetryBtn" class="ghost">Retry</button>
           <button id="failMapBtn" class="ghost">Map</button>
         </div>
       </div>
     </div>
 
-    <section class="meta">
-      <div class="meta-card">
-        <h3>Why this demo works</h3>
-        <p>
-          A calm palette, clean grid, and deliberate pacing create a premium, low-stress match experience.
-          The loop is ready for boosters, streak rewards, daily goals, and themed events.
-        </p>
-      </div>
-      <div class="meta-card">
-        <h3>Next updates</h3>
-        <ul>
-          <li>Objectives: collect specific colors, break crates, clear mist.</li>
-          <li>Boosters: split-path, color storm, and shuffle.</li>
-          <li>Monetization: optional move packs, ad-based continue, VIP track.</li>
-        </ul>
-      </div>
-    </section>
     </section>
   </div>
 

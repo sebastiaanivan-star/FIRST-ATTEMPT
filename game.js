@@ -68,6 +68,7 @@ const shopCoinsEl = document.getElementById("shopCoins");
 const vipRewardEl = document.getElementById("vipReward");
 const vipTimerEl = document.getElementById("vipTimer");
 const installBtn = document.getElementById("installBtn");
+const chapterLabelEl = document.getElementById("chapterLabel");
 
 const boosterButtons = document.querySelectorAll(".booster");
 const boostShuffleEl = document.getElementById("boostShuffle");
@@ -80,19 +81,6 @@ const cellSize = (canvas.width - padding * 2) / gridSize;
 const radius = cellSize * 0.32;
 
 let colors = ["#f37d6b", "#f4bf5f", "#63c2a7", "#6b8df6", "#b57be8"];
-const chapterSize = 10;
-const chapterNames = [
-  "Market Street",
-  "Harbor Row",
-  "Bloom Park",
-  "Cocoa Hills",
-  "Mint Valley",
-  "Berry Bay",
-  "Sunset Pier",
-  "Cloudway",
-  "Golden Plaza",
-  "Skyline Terrace",
-];
 const chapterThemes = [
   {
     accent: "#f08e6e",
@@ -104,33 +92,60 @@ const chapterThemes = [
     pathGlow: "rgba(240, 142, 110, 0.55)",
   },
   {
-    accent: "#63c2a7",
-    glow: "rgba(99, 194, 167, 0.35)",
-    vignette: "rgba(32, 54, 46, 0.2)",
+    accent: "#5aa7e0",
+    glow: "rgba(90, 167, 224, 0.35)",
+    vignette: "rgba(30, 42, 64, 0.2)",
     highlight: "rgba(255, 255, 255, 0.7)",
-    ambient: ["#63c2a7", "#6b8df6", "#b57be8"],
-    path: "#6ccbb2",
-    pathGlow: "rgba(99, 194, 167, 0.55)",
-  },
-  {
-    accent: "#6b8df6",
-    glow: "rgba(107, 141, 246, 0.35)",
-    vignette: "rgba(30, 38, 70, 0.2)",
-    highlight: "rgba(255, 255, 255, 0.7)",
-    ambient: ["#6b8df6", "#b57be8", "#63c2a7"],
-    path: "#8ea7fb",
-    pathGlow: "rgba(107, 141, 246, 0.55)",
-  },
-  {
-    accent: "#f4bf5f",
-    glow: "rgba(244, 191, 95, 0.35)",
-    vignette: "rgba(73, 50, 20, 0.18)",
-    highlight: "rgba(255, 255, 255, 0.68)",
-    ambient: ["#f4bf5f", "#f37d6b", "#f08e6e"],
-    path: "#f7c76e",
-    pathGlow: "rgba(244, 191, 95, 0.55)",
+    ambient: ["#63c2a7", "#6b8df6", "#5aa7e0"],
+    path: "#6baee7",
+    pathGlow: "rgba(90, 167, 224, 0.55)",
   },
 ];
+const chapters = [
+  {
+    name: "Market Run",
+    count: 50,
+    intro: "Basics and crates",
+    themeIndex: 0,
+    rules: { allowIce: false, allowStorm: false, crateStart: 6, hintDelay: 4.5, swapSpeed: 7 },
+  },
+  {
+    name: "Sky Harbor",
+    count: 30,
+    intro: "Ice, storms, QOL",
+    themeIndex: 1,
+    rules: { allowIce: true, allowStorm: true, crateStart: 0, hintDelay: 3.3, swapSpeed: 8 },
+  },
+];
+const totalLevels = chapters.reduce((sum, chapter) => sum + chapter.count, 0);
+
+function getChapterIndex(level) {
+  let total = 0;
+  for (let i = 0; i < chapters.length; i++) {
+    total += chapters[i].count;
+    if (level < total) return i;
+  }
+  return Math.max(0, chapters.length - 1);
+}
+
+function getChapterStart(index) {
+  let start = 0;
+  for (let i = 0; i < index; i++) {
+    start += chapters[i].count;
+  }
+  return start;
+}
+
+function getChapterForLevel(level) {
+  const index = getChapterIndex(level);
+  const start = getChapterStart(index);
+  return {
+    ...chapters[index],
+    index,
+    start,
+    localIndex: level - start,
+  };
+}
 
 const tuning = {
   movesBase: 24,
@@ -141,7 +156,7 @@ const tuning = {
   crateStep: 2,
 };
 
-let levels = buildLevels(100, tuning);
+let levels = buildLevels(totalLevels, tuning);
 
 let grid = [];
 let score = 0;
@@ -184,7 +199,7 @@ let movesStart = 0;
 let tutorialActive = false;
 let tutorialStep = 0;
 const cascadeClearDelay = 0.12;
-const hintDelay = 4.5;
+let hintDelay = 4.5;
 let hintCells = null;
 let needsMoveCheck = true;
 let lastInteractionTime = 0;
@@ -238,6 +253,7 @@ function initLevel(index) {
   activeBooster = null;
   updateBoosterUI();
   applyChapterTheme(levelIndex);
+  updateChapterLabel();
   buildGrid(config);
   initAmbient();
   hintCells = null;
@@ -302,10 +318,12 @@ function randomColor() {
 }
 
 function applyChapterTheme(index) {
-  const chapter = Math.floor(index / chapterSize);
-  const theme = chapterThemes[chapter % chapterThemes.length];
+  const chapter = getChapterForLevel(index);
+  const theme = chapterThemes[chapter.themeIndex % chapterThemes.length];
   currentTheme = theme;
   ambientPalette = theme.ambient;
+  hintDelay = chapter.rules.hintDelay;
+  swapSpeed = chapter.rules.swapSpeed;
   const root = document.documentElement;
   root.style.setProperty("--ui-accent", theme.accent);
   root.style.setProperty("--accent", theme.accent);
@@ -315,17 +333,26 @@ function applyChapterTheme(index) {
   drawRampPreview();
 }
 
+function updateChapterLabel() {
+  if (!chapterLabelEl) return;
+  const chapter = getChapterForLevel(levelIndex);
+  chapterLabelEl.textContent = `Chapter ${chapter.index + 1}: ${chapter.name}`;
+}
+
 function buildLevels(count, tune) {
   const result = [];
   for (let i = 0; i < count; i++) {
-    const tier = Math.floor(i / 10);
-    const moves = tune.movesBase + Math.min(10, tier * tune.movesStep) + (i % 3);
-    const crates = i < tune.crateStart ? 0 : Math.min(18, 4 + tier * tune.crateStep);
-    const ice = i > 6 && i % 4 === 0 ? 6 + tier * 2 : 0;
+    const chapter = getChapterForLevel(i);
+    const tier = Math.floor(chapter.localIndex / 10);
+    const moves = tune.movesBase + Math.min(10, tier * tune.movesStep) + (chapter.localIndex % 3);
+    const crateStart = Math.max(0, chapter.rules.crateStart + (tune.crateStart - 8));
+    const crates = chapter.localIndex < crateStart ? 0 : Math.min(18, 4 + tier * tune.crateStep);
+    const allowIce = chapter.rules.allowIce;
+    const ice = allowIce && chapter.localIndex > 6 && chapter.localIndex % 4 === 0 ? 6 + tier * 2 : 0;
     const boosters = {
-      shuffle: i % 7 === 0 ? 2 : 1,
-      hammer: i % 5 === 0 ? 2 : 1,
-      storm: i > 12 && i % 9 === 0 ? 1 : 0,
+      shuffle: chapter.localIndex % 7 === 0 ? 2 : 1,
+      hammer: chapter.localIndex % 5 === 0 ? 2 : 1,
+      storm: chapter.rules.allowStorm && chapter.localIndex > 8 && chapter.localIndex % 9 === 0 ? 1 : 0,
     };
     const objectives = [
       { type: "color", color: colors[i % colors.length], target: tune.objBase + tier * tune.objStep },
@@ -337,7 +364,7 @@ function buildLevels(count, tune) {
     if (ice > 0) {
       objectives.push({ type: "ice", target: ice });
     }
-    result.push({ moves, boosters, objectives, crates, ice });
+    result.push({ moves, boosters, objectives, crates, ice, chapterIndex: chapter.index });
   }
   return result;
 }
@@ -377,6 +404,12 @@ function draw() {
       ctx.arc(x, y, drawRadius, 0, Math.PI * 2);
       ctx.fill();
       ctx.shadowBlur = 0;
+
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.28)";
+      ctx.lineWidth = Math.max(1.2, drawRadius * 0.08);
+      ctx.beginPath();
+      ctx.arc(x, y, drawRadius - 0.5, 0, Math.PI * 2);
+      ctx.stroke();
 
       ctx.save();
       ctx.globalAlpha = 0.35;
@@ -495,6 +528,15 @@ function drawIceOverlay(x, y, r) {
   ctx.lineTo(x + r * 0.12, y + r * 0.05);
   ctx.lineTo(x - r * 0.05, y - r * 0.15);
   ctx.stroke();
+
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.65)";
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.moveTo(x - r * 0.05, y - r * 0.45);
+  ctx.lineTo(x - r * 0.05, y - r * 0.6);
+  ctx.moveTo(x - r * 0.12, y - r * 0.53);
+  ctx.lineTo(x + r * 0.02, y - r * 0.53);
+  ctx.stroke();
   ctx.restore();
 }
 
@@ -511,6 +553,15 @@ function drawCrate(x, y) {
     ctx.rect(x - radius * 0.9, y - radius * 0.9, radius * 1.8, radius * 1.8);
   }
   ctx.fill();
+  ctx.stroke();
+
+  ctx.strokeStyle = "rgba(47, 44, 42, 0.25)";
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.moveTo(x - radius * 0.6, y - radius * 0.6);
+  ctx.lineTo(x + radius * 0.6, y + radius * 0.6);
+  ctx.moveTo(x - radius * 0.6, y + radius * 0.6);
+  ctx.lineTo(x + radius * 0.6, y - radius * 0.6);
   ctx.stroke();
   ctx.restore();
 }
@@ -1115,8 +1166,13 @@ function updateBoosterUI() {
   boostHammerEl.textContent = getBoosterCount("hammer");
   boostStormEl.textContent = getBoosterCount("storm");
 
+  const chapter = getChapterForLevel(levelIndex);
   boosterButtons.forEach((button) => {
-    button.classList.toggle("active", button.dataset.booster === activeBooster);
+    const type = button.dataset.booster;
+    const locked = type === "storm" && !chapter.rules.allowStorm;
+    button.classList.toggle("active", type === activeBooster);
+    button.classList.toggle("locked", locked);
+    button.disabled = locked;
   });
 }
 
@@ -1265,10 +1321,11 @@ function checkFailState() {
 function getMilestonePack() {
   if ((levelIndex + 1) % 5 !== 0) return null;
   if (progress.milestoneRewards[levelIndex]) return null;
+  const chapter = getChapterForLevel(levelIndex);
   const pack = {
     shuffle: 1,
     hammer: 1,
-    storm: levelIndex > 10 ? 1 : 0,
+    storm: chapter.rules.allowStorm && levelIndex > 10 ? 1 : 0,
   };
   progress.boosterInventory.shuffle += pack.shuffle;
   progress.boosterInventory.hammer += pack.hammer;
@@ -1915,17 +1972,27 @@ function renderMap() {
 
   addMapDecor(mapHeight);
 
-  for (let chapter = 0; chapter < Math.ceil(levels.length / chapterSize); chapter++) {
-    const startIndex = chapter * chapterSize;
+  let startIndex = 0;
+  chapters.forEach((chapter, chapterIndex) => {
     const anchor = positions[startIndex];
-    if (!anchor) continue;
+    if (!anchor) {
+      startIndex += chapter.count;
+      return;
+    }
+    const rangeStart = startIndex + 1;
+    const rangeEnd = startIndex + chapter.count;
     const marker = document.createElement("div");
     marker.className = "map-chapter";
-    marker.innerHTML = `<div class="chapter-label">Chapter ${chapter + 1}</div><div class="chapter-title">${chapterNames[chapter % chapterNames.length]}</div>`;
+    marker.innerHTML =
+      `<div class="chapter-label">Chapter ${chapterIndex + 1}</div>` +
+      `<div class="chapter-title">${chapter.name}</div>` +
+      `<div class="chapter-range">Levels ${rangeStart}-${rangeEnd}</div>` +
+      `<div class="chapter-intro">${chapter.intro}</div>`;
     marker.style.left = "50%";
     marker.style.top = `${Math.max(50, anchor.y - 90)}px`;
     mapPathEl.appendChild(marker);
-  }
+    startIndex += chapter.count;
+  });
 
   levels.forEach((_, idx) => {
     const node = document.createElement("div");
@@ -1950,7 +2017,7 @@ function renderMap() {
     } else if (idx + 1 < unlockedLevels) {
       label.textContent = "Cleared";
     } else {
-      label.textContent = "Level";
+      label.textContent = "Stage";
     }
 
     const number = document.createElement("div");
@@ -1960,7 +2027,7 @@ function renderMap() {
     const starRow = document.createElement("div");
     starRow.className = "map-stars";
     const earned = progress.levelStars[idx] || 0;
-    starRow.textContent = `${"★".repeat(earned)}${"☆".repeat(3 - earned)}`;
+    starRow.textContent = `${"*".repeat(earned)}${"-".repeat(3 - earned)}`;
 
     if ((idx + 1) % 5 === 0) {
       const badge = document.createElement("div");
@@ -2195,11 +2262,11 @@ if (failMapBtn) {
 }
 
 shareBtn.addEventListener("click", async () => {
-  const text = `I just cleared level ${lastSummary.level} in Drift Dots!`;
+  const text = `I just cleared stage ${lastSummary.level} in Drift Dots!`;
   const dataUrl = generateShareCard();
   const link = document.createElement("a");
   link.href = dataUrl;
-  link.download = `drift-dots-level-${lastSummary.level}.png`;
+  link.download = `drift-dots-stage-${lastSummary.level}.png`;
   link.click();
   try {
     if (navigator.clipboard) {
@@ -2222,7 +2289,7 @@ function buildMapPositions(count) {
 
   for (let i = 0; i < count; i++) {
     const t = i / 6;
-    const chapter = Math.floor(i / chapterSize);
+    const chapter = getChapterIndex(i);
     const y = top + i * step + chapter * chapterGap;
     const wave = Math.sin(t) * 180;
     const drift = Math.sin(t * 0.7 + 1.4) * 60;
@@ -2314,6 +2381,8 @@ function loadProgress() {
       merged.milestoneRewards = merged.milestoneRewards.concat(
         Array.from({ length: levels.length - merged.milestoneRewards.length }, () => false)
       );
+    } else if (merged.milestoneRewards.length > levels.length) {
+      merged.milestoneRewards = merged.milestoneRewards.slice(0, levels.length);
     }
     if (typeof merged.audioEnabled !== "boolean") {
       merged.audioEnabled = defaults.audioEnabled;
@@ -2340,15 +2409,18 @@ function loadProgress() {
         Array.from({ length: levels.length - merged.levelStars.length }, () => 0)
       );
     }
-    if (!merged.totalStars) {
-      merged.totalStars = merged.levelStars.reduce((sum, value) => sum + value, 0);
+    if (merged.levelStars.length > levels.length) {
+      merged.levelStars = merged.levelStars.slice(0, levels.length);
     }
+    merged.totalStars = merged.levelStars.reduce((sum, value) => sum + value, 0);
     if (!merged.unlockedLevels || merged.unlockedLevels < 1) {
       let lastCleared = -1;
       for (let i = 0; i < merged.levelStars.length; i++) {
         if (merged.levelStars[i] > 0) lastCleared = i;
       }
       merged.unlockedLevels = Math.min(levels.length, Math.max(1, lastCleared + 2));
+    } else if (merged.unlockedLevels > levels.length) {
+      merged.unlockedLevels = levels.length;
     }
     return merged;
   } catch (error) {
@@ -2387,7 +2459,7 @@ function updateMetaUI() {
 
 function updateSoundUI() {
   if (!soundToggleBtn || !soundVolumeEl) return;
-  soundToggleBtn.textContent = progress.audioEnabled ? "On" : "Off";
+  soundToggleBtn.textContent = progress.audioEnabled ? "Sound On" : "Sound Off";
   soundVolumeEl.value = progress.audioVolume;
   soundVolumeEl.disabled = !progress.audioEnabled;
 }
@@ -2534,7 +2606,7 @@ function applyTuningFromUI() {
   tuning.crateStart = Number(crateStartEl.value);
   tuning.crateStep = Number(crateStepEl.value);
   syncTuningUI();
-  levels = buildLevels(100, tuning);
+  levels = buildLevels(totalLevels, tuning);
   initLevel(Math.min(levelIndex, levels.length - 1));
   renderMap();
 }
@@ -2572,7 +2644,7 @@ function drawRampPreview() {
   drawLine(objValues, "#6b8df6");
 
   ctxPreview.fillStyle = "rgba(47, 44, 42, 0.6)";
-  ctxPreview.font = "12px sans-serif";
+  ctxPreview.font = "12px Nunito, sans-serif";
   ctxPreview.fillText("Moves", 12, 16);
   ctxPreview.fillText("Objectives", 70, 16);
 }

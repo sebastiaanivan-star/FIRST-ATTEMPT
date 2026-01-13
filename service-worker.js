@@ -1,4 +1,4 @@
-﻿const CACHE_NAME = "drift-dots-v2";
+const CACHE_NAME = "drift-dots-v3";
 const ASSETS = [
   "./",
   "./index.html",
